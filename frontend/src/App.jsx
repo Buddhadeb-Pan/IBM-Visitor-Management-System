@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-// Backend API Base URLs
-const API_URL = "http://localhost:5000/api/visitors";
-const AUTH_URL = "http://localhost:5000/api/auth";
+// Backend API Base URLs (configured via VITE_API_URL with localhost fallback)
+const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+const API_URL = `${BACKEND_URL}/api/visitors`;
+const AUTH_URL = `${BACKEND_URL}/api/auth`;
 
 // Default empty form state for visitors
 const initialFormState = {

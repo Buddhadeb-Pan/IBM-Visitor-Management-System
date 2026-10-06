@@ -5,11 +5,16 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const requireAuth = require("../middleware/auth");
 
-// Standard cookie settings for JWT storage
+// Determine if running in production (either NODE_ENV=production or a production CLIENT_URL is set)
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.CLIENT_URL && !process.env.CLIENT_URL.includes("localhost"));
+
+// Standard cookie settings for JWT storage (SameSite=None + Secure required for cross-site Vercel to Render)
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 };
 
@@ -122,8 +127,8 @@ router.post("/login", async (req, res) => {
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
   });
   return res.status(200).json({ message: "Logged out successfully." });
 });

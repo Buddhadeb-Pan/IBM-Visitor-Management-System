@@ -14,17 +14,38 @@ const PORT = process.env.PORT || 5000;
 app.set("trust proxy", 1);
 
 // Middleware
+const rawClientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL;
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
 ];
-if (process.env.CLIENT_URL) {
-  allowedOrigins.push(process.env.CLIENT_URL);
+
+if (rawClientUrl) {
+  rawClientUrl
+    .split(",")
+    .map((url) => url.trim().replace(/\/+$/, ""))
+    .filter(Boolean)
+    .forEach((url) => {
+      if (!allowedOrigins.includes(url)) {
+        allowedOrigins.push(url);
+      }
+    });
 }
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. server-to-server, curl, uptime checks)
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      // Explicitly reject unapproved origins without allowing wildcard with credentials
+      return callback(null, false);
+    },
     credentials: true, // Allow cookies to be sent across origins
   })
 );
